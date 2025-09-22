@@ -19,13 +19,14 @@
 ### 2.2 分支模型
 
 - **模型:** 严格遵守 **GitHub Flow**。
-  1. `main` 分支是唯一的主分支，永远处于可发布状态。
-  2. 所有新功能或修复，都必须从`main`创建新的特性分支。
+  1. `main` 分支是唯一的主分支，永远处于可发布状态。目前基本上用不上这个主分支！
+  2. 所有新功能或修复，都必须从`main`创建新的特性分支。(后话)
   3. 分支命名：`<type>/<scope>/<short-description>`
      - **`<type>`:** `feat`, `fix`, `refactor`, `docs`, `test`。
      - **`<scope>`:** 模块名，如`dms`, `hal`, `sdk`。
      - **示例:** `feat/dms/add-publish-api`, `fix/hal/camera-timeout-issue`。
   4. 开发完成后，向`main`分支提交Pull Request (PR)。
+  5.feat, fix, refactor, docs, testsu所有类型的分支都有一个main(例如:feat/main,fix/main...),和唯一那个主main不一样。
 
 ### 2.3 提交规范 (Commit Convention)
 
