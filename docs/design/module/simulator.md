@@ -1,0 +1,35 @@
+# ARF 模块开发参考文档：仿真模块 (Simulation)
+
+所属平面: ARF 云端平面 (Cloud Plane)
+
+模块代号: arf-cloud-sim
+
+### 1. 核心职责 (Core Mission)
+
+提供大规模、高并发、物理精准的虚拟测试环境，作为算法评测、模型验证和强化学习训练的“数字孪生”靶场。
+
+### 2. 关键功能与子模块
+
+- **场景管理器:** 负责加载、配置和管理不同的仿真世界（如家庭、工厂、室外）。
+- **机器人模型库:** 存储和加载各种机器人的URDF/SDF/USD模型。
+- **传感器模拟器:** 模拟摄像头、LiDAR、IMU等传感器的物理特性和数据输出。
+- **结果记录器:** 记录仿真过程中的所有数据，包括任务成功/失败、碰撞、路径等，用于后续分析。
+
+### 3. 主要接口与数据流
+
+- **输入:**
+  - `场景ID`: 指定要加载的仿真环境。
+  - `机器人模型ID`: 指定要在场景中生成的机器人。
+  - `待评测算法/模型`: 以容器或插件形式接收的待测试智能体。
+- **输出:**
+  - `仿真传感器数据`: 以标准`BusMessage`格式输出，可被`数据中心`记录。
+  - `任务执行日志`: 详细的事件日志。
+  - `性能评测分数`: 针对特定任务的量化评分。
+- **交互协议:** 通过gRPC服务（`simulation.proto`）接收来自`评测模块`或开发者的仿真任务请求。
+
+### 4. 主选技术栈与开发参考
+
+- **核心引擎:** NVIDIA Isaac Sim, Gazebo
+  - **参考:** [NVIDIA Isaac Sim Documentation](https://www.google.com/search?q=https://docs.nvidia.com/isaac/isaac/doc/index.html), [Gazebo Simulator](https://gazebosim.org/)
+- **编排:** Kubernetes
+  - **参考:** [Kubernetes Documentation](https://kubernetes.io/docs/)

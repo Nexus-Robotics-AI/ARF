@@ -1,0 +1,164 @@
+# .github/workflows/ci.yml
+
+# 工作流名称
+name: ARF Continuous Integration
+
+# 触发条件：当有代码推送到main分支，或者创建/更新一个指向main分支的Pull Request时
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  # 第一个任务：确定哪些文件发生了变化
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      # 输出将用于后续任务的判断
+      go: ${{ steps.filter.outputs.go }}
+      python: ${{ steps.filter.outputs.python }}
+      rust: ${{ steps.filter.outputs.rust }}
+      cpp: ${{ steps.filter.outputs.cpp }}
+      proto: ${{ steps.filter.outputs.proto }}
+      docs: ${{ steps.filter.outputs.docs }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            go:
+              - '**/*.go'
+              - 'go.mod'
+              - 'go.sum'
+            python:
+              - '**/*.py'
+              - '**/requirements.txt'
+            rust:
+              - '**/*.rs'
+              - '**/Cargo.toml'
+              - '**/Cargo.lock'
+            cpp:
+              - '**/*.cpp'
+              - '**/*.h'
+              - '**/CMakeLists.txt'
+            proto:
+              - 'api/**/*.proto'
+            docs:
+              - 'docs/**/*.md'
+              - '*.md'
+
+  # Go语言相关任务
+  lint-test-go:
+    needs: changes
+    if: needs.changes.outputs.go == 'true'
+    name: Lint & Test Go
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      - name: Go Lint
+        run: |
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+          staticcheck ./...
+          go vet ./...
+      - name: Go Test
+        run: go test -v -race ./...
+
+  # Python语言相关任务
+  lint-test-python:
+    needs: changes
+    if: needs.changes.outputs.python == 'true'
+    name: Lint & Test Python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: pip install black isort flake8 pytest
+      - name: Python Lint
+        run: |
+          black --check .
+          isort --check-only .
+          flake8 .
+      - name: Python Test
+        run: pytest
+
+  # Rust语言相关任务
+  lint-test-rust:
+    needs: changes
+    if: needs.changes.outputs.rust == 'true'
+    name: Lint & Test Rust
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Rust Lint
+        run: cargo clippy -- -D warnings
+      - name: Rust Test
+        run: cargo test
+
+  # C++语言相关任务
+  build-test-cpp:
+    needs: changes
+    if: needs.changes.outputs.cpp == 'true'
+    name: Build & Test C++
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake
+      - name: C++ Build
+        run: |
+          cmake -B build
+          cmake --build build
+      - name: C++ Test
+        run: |
+          cd build
+          ctest
+
+  # Protobuf接口相关任务
+  lint-proto:
+    needs: changes
+    if: needs.changes.outputs.proto == 'true'
+    name: Lint Protobuf
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: bufbuild/buf-setup-action@v1
+      - name: Buf Lint
+        run: buf lint api/
+      - name: Buf Breaking Change Detection
+        # 检查与main分支的最新版本相比，是否有不兼容的API变更
+        run: |
+          git config --global --add safe.directory /github/workspace
+          buf breaking --against ".git#branch=main,ref=HEAD~1" api/
+
+  # 最终状态检查任务
+  ci-status:
+    # 只有当所有前置任务都成功后，这个任务才会运行
+    needs: [lint-test-go, lint-test-python, lint-test-rust, build-test-cpp, lint-proto]
+    # "if: always()" 确保即使有任务被跳过（因为文件未更改），这个任务也能运行
+    if: always()
+    name: CI Status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check status of all jobs
+        # 如果任何一个依赖任务失败了，这个步骤就会失败，从而让整个PR检查失败
+        run: |
+          if [[ "${{ needs.lint-test-go.result }}" == "failure" || \
+                "${{ needs.lint-test-python.result }}" == "failure" || \
+                "${{ needs.lint-test-rust.result }}" == "failure" || \
+                "${{ needs.build-test-cpp.result }}" == "failure" || \
+                "${{ needs.lint-proto.result }}" == "failure" ]]; then
+            echo "One or more CI jobs failed."
+            exit 1
+          else
+            echo "All CI jobs passed or were skipped."
+            exit 0
+          fi
