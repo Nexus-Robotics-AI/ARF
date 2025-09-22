@@ -33,3 +33,9 @@
   - **参考:** [NVIDIA Isaac Sim Documentation](https://www.google.com/search?q=https://docs.nvidia.com/isaac/isaac/doc/index.html), [Gazebo Simulator](https://gazebosim.org/)
 - **编排:** Kubernetes
   - **参考:** [Kubernetes Documentation](https://kubernetes.io/docs/)
+
+### 5. 开发时间线大致安排
+
+- **10.8前**: 完成与数据中心通信接口的编写
+- **10.20前**: 与数据中心对接，调通接口，完成场景、机器人、传感器等数据在仿真环境中的加载工作
+- **10.30前**: 完成输出仿真数据、评估分数、日志数据流到数据中心的代码编写工作
