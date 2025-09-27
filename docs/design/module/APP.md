@@ -123,7 +123,7 @@
 
 ### 🧬 核心API草案 (`api_gateway.proto`)
 
-```
+```protobuf
 // protos/arf/edge/v1/api_gateway.proto
 // 这个API服务由API层提供，作为UI和应用套件之间的网关
 syntax = "proto3";
