@@ -159,7 +159,7 @@
 
 Protocol Buffers
 
-```
+```protobuf
 // protos/arf/cloud/v1/simulation.proto
 syntax = "proto3";
 
