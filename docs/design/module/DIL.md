@@ -1,329 +1,202 @@
-# 🔥 ARF 模块开发参考文档：决策智能层 (DIL)  V1.1
+# 🔥 ARF 模块开发参考文档：决策智能层 (DIL) V1.1
 
-> 🎯 **角色定位:** ARF的"大脑" - 编排感知与行动，实现复杂任务逻辑。
->
+> 🎯 **角色定位:** ARF的"**认知架构框架**"与"**决策组件工具箱**" - 赋能开发者构建、组合并部署机器人的“大脑”。
+> 
 > 📦 **模块代号:** `arf-edge-dil`
->
+> 
 > ⚡ **所属:** ARF 边缘平台 (Edge Plane)
 
 ## 📋 1. 核心职责与设计理念
 
 ### 🎯 核心使命 (Core Mission)
 
-作为ARF的“大脑”，DIL的核心使命是**编排和调用**`ACR`提供的各种原子化“算法能力”，融合来自`DMS`的多模态信息，并根据当前的任务目标，**生成一系列有意义的行动指令**，最终通过`HAL`层作用于物理世界。
+作为ARF的认知核心，DIL的核心使命是**为算法工程师和科研人员提供一个高度灵活、可组合的“决策智能框架”**。它本身不是一个固定的“大脑”架构，而是一个**“组件工具箱”**和一套**“设计规范”**。开发者可以自由选用ARF官方提供的决策组件，或完全自研新的组件，最终像搭乐高一样，构建出最适合特定任务的、独一无二的机器人决策实例 (DIL Instance)。
 
-它的进化目标是超越简单的任务编排，成为一个能够**在线学习、主动预测并进行长期记忆交互**的认知代理。
+它的进化目标是不断丰富官方组件库，提供从经典行为树到前沿世界模型的全方位支持，最终成为具身智能领域最高效、最富有创造力的认知架构设计平台。
 
-主要应用场景包括：
+### 🏗️ 核心概念：可组合的决策层级 (Composable Decision Hierarchy)
 
-- **🤖 任务规划与执行:** 将用户的抽象指令（如“给我拿个苹果”）分解为一系列具体的机器人动作。
-- **🧠 行为决策:** 根据环境变化和自身状态，动态地选择最合适的行为策略（如避障、探索、交互）。
-- **🧩 知识推理:** 结合大型语言模型(LLM)和本地知识库，进行常识推理，以更好地理解和完成任务。
-- **🛡️ 安全监控:** 作为系统安全的最后一道防线，持续监控系统状态，并在检测到危险时触发安全策略。
-- **🌱 在线持续学习:** 在任务执行过程中，利用新的交互数据在边缘端进行轻量级模型微调，实现对环境的快速适应
+ARF的决策智能设计遵循一个清晰、可扩展的三层结构，赋予开发者在不同粒度上创新的能力：
 
-### 🏗️ 核心架构：分层决策与策略模式 + 预测性世界模型 (Hierarchical Decision + Predictive World Model)
+- **层级1：原子算法能力 (ACR Container)**
+  
+  * **定义：** 每一个ACR容器都是一个独立的、封装好的、可被调用的“原子技能”。例如：`YOLOv8-Detector-ACR`, `RRT-Planner-ACR`, `Grasp-Pose-Estimator-ACR`。
+  * **角色：** 构成整个智能生态的**最小功能单元**。
 
-DIL的架构设计将“长期规划”与“短期反应”分离，并允许动态加载不同的“行为策略”。
+- **层级2：组合决策组件 (DIL Component)**
+  
+  * **定义：** 一个DIL组件是实现某个特定决策逻辑的模块。它可以是纯逻辑代码，也可以是通过编排多个ACR容器形成的更高级能力。
+  * **角色：** 构成最终决策大脑的**“中尺度”构建模块**。开发者既可以使用ARF官方组件，也可以创建自己的组件。
 
-- **分层决策 (Hierarchical):**
-  - **高层规划器 (High-level Planner):** 负责将任务目标分解为一系列逻辑子任务（e.g., `MapsTo(kitchen)`, `Detect(apple)`, `Grasp(apple)`）。它可以是符号化的规划器或基于LLM的代理。
-  - **低层控制器 (Low-level Controller):** 负责执行具体的子任务，将逻辑指令转化为连续的控制信号。它可以是基于强化学习(RL)的策略、行为树(BT)或经典控制器。
-- **预测性世界模型 (Predictive World Model):** 内部的“世界模型” 不再仅仅记录当前状态，而是升级为一个主动的“未来状态预测器”。它能预测环境中其他动态实体（如人）的短期意图和行为，为前瞻性决策提供依据。
-- **策略模式 (Strategy Pattern):** 不同的机器人行为（如导航、抓取）被封装为可插拔的“策略”模块。DIL可以根据任务上下文，动态地加载和切换这些策略。
+- **层级3：完整决策架构 (DIL Instance)**
+  
+  * **定义：** 这是由开发者最终设计的、针对特定机器人或应用的完整“大脑”。它是一个由多个“DIL组件”有机组合而成的、可执行的服务。
+  * **角色：** 系统的**最终决策者**，是开发者创造力的最终体现。
 
 ### ⚖️ 设计原则 (Design Principles)
 
-- **🧠 灵活性:** 架构必须足够灵活，以支持从传统的行为树到前沿的端到端VLA模型的各种决策范式。
-- **🔌 可扩展性:** 添加一个新的机器人技能或决策逻辑，应该是可插拔的，不应需要修改核心代码。
-- **🧩 模块化:** 任务规划、行为决策、安全监控等功能应在代码层面解耦。
-- **🤔 可解释性:** 决策过程应尽可能地可追溯和可调试，方便开发者理解机器人的“想法”。
-- **🌱 持续进化 (Continual Evolution):** 必须提供接口和机制，支持模型和策略的在线学习与自适应，让智能在边缘端也能持续进化。
+- **🧠 灵活性优先 (Flexibility First):** 框架必须足够灵活，以支持从传统的行为树到前沿的端到端VLA模型的各种决策范式。
+- **🔌 可组合性 (Composability):** DIL的核心是组合。所有组件都应设计为可独立开发、测试，并能轻松地与其他组件连接。
+- **🧩 开发者赋能 (Developer Empowerment):** 平台的核心任务是提供工具和高质量的组件，把架构设计的自由度最大化地交给开发者。
+- **🤔 可解释性 (Interpretability):** 官方组件的设计应追求可追溯和可调试性，方便开发者理解其内部逻辑。
+- **🌱 持续进化 (Continual Evolution):** 框架必须提供接口和机制，支持组件和实例的在线学习与自适应，让智能在边缘端也能持续进化。
 
-## 📝 2. 核心需求 (Core Requirements)
+## 📝 2. 核心需求 (Framework Requirements)
 
-| **ID** | **需求描述**                            | **验收标准**                                                 | **优先级**     |
-| ------ | --------------------------------------- | ------------------------------------------------------------ | -------------- |
-| **L1** | **多模态信息融合 (Multi-modal Fusion)** | DIL必须能够订阅并融合来自`DMS`的多种数据源（如视觉特征、目标列表、IMU、文本指令）作为决策依据。 | **最高**       |
-| **L2** | **任务逻辑编排 (Task Orchestration)**   | 必须提供一种机制（如行为树、状态机），用于编排对`ACR`和`HAL`模块的调用，以完成复杂的多步任务。 | **最高**       |
-| **L3** | **策略库与动态加载 (Policy Library)**   | DIL应支持一个“策略库”，可以从中根据任务需求动态加载和执行不同的行为策略（如导航策略、抓取策略）。 | **高**         |
-| **L4** | **知识推理能力 (Knowledge Reasoning)**  | 必须提供接口，允许DIL调用外部LLM服务和内部知识库，以进行任务规划和常识推理。 | **高**         |
-| **L5** | **安全监控 (Safety Monitoring)**        | 必须持续监控来自`HAL`的硬件状态和来自`ACR`的感知信息（如置信度图），并在检测到潜在风险时，能够覆盖或中止当前任务，执行安全策略。 | **最高**       |
-| **L6** | **状态管理 (State Management)**         | 必须维护一个内部的“世界模型 (World Model)”或“信念状态 (Belief State)”，持续追踪机器人自身和环境的关键状态。 | **高**         |
-| **L7** | **在线学习与自适应**                    | 必须提供机制，支持在边缘端利用新数据对本地模型进行轻量级微调。 | **高 (V1.1+)** |
-| **L8** | **预测性世界建模**                      | “世界模型”必须具备短期未来预测能力，能预测环境中动态实体的行为。 | **中 (V1.1+)** |
-| **L9** | **长期记忆接口**                        | 必须提供API，用于查询和更新与特定用户或实体关联的长期记忆。  | **中 (V1.1+)** |
+| **ID** | **需求描述**                        | **验收标准**                                                   | **优先级**       |
+| ------ | ------------------------------- | ---------------------------------------------------------- | ------------- |
+| **L1** | **组件化框架 (Component Framework)** | 必须提供一个清晰的基类和注册机制，允许开发者创建、注册和连接自定义的DIL组件。                   | **最高**        |
+| **L2** | **标准组件库 (Standard Library)**    | 必须提供一套官方维护的、高质量的、可复用的DIL组件（如行为树、世界模型）。                     | **最高**        |
+| **L3** | **多模态信息接入**                     | 框架必须让组件能够轻松地从`DMS`订阅和融合多种数据源。                              | **最高**        |
+| **L4** | **标准化执行接口**                     | 框架必须让组件能够通过统一、标准化的方式调用`ACR`和`HAL`的服务。                      | **高**         |
+| **L5** | **安全策略强制执行**                    | 框架必须提供一种机制，允许安全相关的组件（如`SafetyMonitor`）拥有最高优先级，能够覆盖其他组件的指令。 | **最高**        |
+| **L6** | **在线学习接口**                      | 框架必须提供标准的接口，允许组件接入在线学习流程，利用新数据进行自我微调。                      | **高 (V1.1+)** |
 
-## ⚙️ 3. 关键功能与子模块架构
+## ⚙️ 3. ARF官方DIL组件库 (Official Component Library)
 
-### 🧠 3.1 任务规划器 (Task Planner)
+ARF官方将提供并维护一个不断扩充的DIL组件库，作为开发者构建决策架构的基础。
 
-**指挥官角色**：负责高层逻辑规划，将抽象目标转化为具体的行动步骤。
+| **组件ID**                       | **组件描述**                           | **核心功能**                                              | **优先级**       |
+| ------------------------------ | ---------------------------------- | ----------------------------------------------------- | ------------- |
+| **`arf.dil.bt_manager`**       | **行为树管理器**：实现复杂、异步、响应式行为的理想工具。     | 提供一个基于`py_trees`的引擎，用于加载和执行XML/Python定义的行为树。          | **最高**        |
+| **`arf.dil.world_model`**      | **世界模型/状态管理器**：维护机器人对自身和环境状态的“信念”。 | 订阅并融合`DMS`数据，提供统一的状态查询接口。V1.1+版本将增加**短期未来预测**能力。      | **最高**        |
+| **`arf.dil.safety_monitor`**   | **安全监控器**：作为系统安全的最后一道防线。           | 持续监控关键状态，并在检测到危险时，能够**覆盖**其他组件的输出，执行安全策略。             | **最高**        |
+| **`arf.dil.task_planner`**     | **任务规划器**：将用户的抽象指令分解为具体的子任务序列。     | 提供一个LLM代理，可将自然语言指令翻译为结构化的行为树或任务列表。                    | **高**         |
+| **`arf.dil.policy_manager`**   | **策略管理器**：管理和执行具体的机器人技能。           | 维护一个可插拔的“策略库”（如导航策略、抓取策略），并根据任务上下文进行动态加载和切换。          | **高**         |
+| **`arf.dil.online_learner`**   | **在线学习管理器**：负责DIL在边缘端的持续进化。        | 监控关键交互数据（如失败学习），并在后台触发对本地模型的轻量级微调。                    | **高 (V1.1+)** |
+| **`arf.dil.mode_manager`**     | **模式管理器**：管理机器人的全局操作模式。            | 负责在 `AUTONOMOUS` 和 `TELEOPERATION` 模式之间进行安全、可靠的切换。    | **最高**        |
+| **`arf.dil.failure_detector`** | **失败检测器**：监控自主任务的执行结果。             | 在检测到任务失败时，能够触发事件，通常用于请求 `ModeManager` 切换到遥操作模式进行人工干预。 | **最高**        |
 
-- **LLM代理 (LLM Agent):**
-  - **工作流程:** 将用户指令和当前场景描述打包成一个Prompt，发送给LLM服务。LLM返回的是一个结构化的子任务序列（e.g., a JSON list of steps）。
-  - **本地知识库 (Local KB):** 用于缓存和检索与特定环境和任务相关的知识，减少对LLM的依赖，并提高推理速度。
+## 🔗 4. DIL与ACR的高级协同模式
 
-### 🧩 3.2 行为树/状态机管理器 (BT/FSM Manager)
+在ARF中，DIL与ACR的关系是灵活且分层的。开发者不仅可以从DIL组件中调用ACR容器，更可以将多个ACR容器组合起来，封装成一个更高级的DIL组件。
 
-**战术执行官角色**：负责执行任务规划器生成的每一个子任务。
+```mermaid
+graph TD
+    subgraph "层级 3: 完整决策架构 (DIL Instance)"
+        direction LR
+        DIL_Instance("<strong><font size=4>家庭服务大脑</font></strong><br>(由开发者设计)")
+    end
 
-- **行为树 (Behavior Tree):** 是实现复杂、异步、响应式行为的理想工具。我们将提供一个行为树引擎，以及一系列可被复用的“行为节点”。
-  - **条件节点:** `IsObjectDetected?`, `IsBatteryLow?`
-  - **动作节点:** `CallACRService(detect_object)`, `CallHALService(move_arm)`
-- **策略库 (Policy Library):** 每一个复杂的“动作节点”（如`MapsTo`) 内部，都会调用一个具体的“策略”来实现。例如，`MapsTo`节点会去策略库中查找当前最优的导航策略来执行。
+    subgraph "层级 2: 组合决策组件 (DIL Component)"
+        direction LR
+        BT_Manager("行为树管理器<br>(官方组件)")
+        Visual_Search("<strong><font size=4>视觉搜索组件</font></strong><br>(开发者自定义)")
+        Safety_Monitor("安全监控器<br>(官方组件)")
+    end
 
-### 🛡️ 3.3 安全调度器 (Safety Scheduler)
+    subgraph "层级 1: 原子算法能力 (ACR Container)"
+        direction LR
+        Nav_ACR("导航ACR")
+        Detect_ACR("目标检测ACR")
+    end
 
-**安全督察角色**：这是位于决策指令输出到`HAL`之前的最后一道关卡。
+    DIL_Instance -- "组合/Connects" --> BT_Manager
+    DIL_Instance -- "组合/Connects" --> Visual_Search
+    DIL_Instance -- "组合/Connects" --> Safety_Monitor
 
-- **工作流程:** 它会接收来自行为树的“期望指令”，同时接收来自各处的“安全状态信息”（如IMU倾角、电机温度、视觉避障模块的风险评估）。
-- **决策逻辑:**
-  - 如果安全状态正常，则将“期望指令”直接透传给`HAL`。
-  - 如果检测到风险（如机器人即将碰撞），它会**覆盖**“期望指令”，并向`HAL`发送一个“安全指令”（如紧急停止）。
+    Visual_Search -- "<strong><font color=blue>编排/Orchestrates</font></strong>" --> Nav_ACR
+    Visual_Search -- "<strong><font color=blue>编排/Orchestrates</font></strong>" --> Detect_ACR
+```
 
-### 🌱 3.4 在线学习管理器 (Online Learning Manager)
+**示例：创建一个 `VisualSearchComponent`**
 
+一个 `VisualSearchComponent` 的DIL组件，其内部逻辑可以通过编排调用 `navigation-acr` 和 `yolov8-detector-acr` 这两个原子能力来实现。
 
+```python
+# 伪代码示例: VisualSearchComponent.py
+from arf_sdk.dil import DILComponent
+from arf_sdk.clients import ACRClient # SDK提供的ACR服务客户端
 
-**经验总结师角色**：负责DIL在边缘端的持续进化。
+class VisualSearchComponent(DILComponent):
+    # DIL组件需要实现标准生命周期方法
+    def on_init(self):
+        """组件初始化时调用"""
+        self.acr_client = ACRClient()
+        self.logger = self.get_logger()
+        self.logger.info("VisualSearchComponent initialized.")
 
-- **工作流程:** 监控任务执行过程，特别是`遥操作模块`介入的“失败学习”场景。当收集到足够的新样本（如新的抓取姿态、新的避障轨迹）时，它会触发一个低优先级的后台任务，对本地的某个`ACR`模型（如抓取策略网络）进行几个迭代的微调。
+    # 组件对外暴露的、可被其他组件或行为树调用的方法
+    def search_for(self, target_object: str) -> bool:
+        """在环境中搜索指定的物体"""
+        # 步骤1：调用导航ACR在预设点之间移动
+        waypoints = self.get_config("search_waypoints")
+        for point in waypoints:
+            self.acr_client.call_async("navigation-acr", {"target_pose": point})
+            self.wait_for_completion("navigation-acr")
 
+            # 步骤2：在每个点调用检测ACR进行识别
+            result = self.acr_client.call("yolov8-detector-acr", {"target": target_object})
+            if result.get("found"):
+                self.logger.info(f"Found {target_object} at {result.get('location')}")
+                return True
 
-
-### 🔮 3.5 预测性世界模型 (Predictive World Model)
-
-
-
-**预言家角色**：从被动记录当前状态，升级为主动预测未来。
-
-- **工作流程:** 订阅环境中动态实体（如人类）的轨迹和状态信息。内部运行一个由云端`训练模块`训练好的“时空预测模型”，持续预测这些实体在接下来几秒内的可能位置和行为，并将这些预测结果作为决策的额外输入信息。
-
-
-
-### 📚 3.6 长期记忆接口 (Long-term Memory Interface)
-
-
-
-**记忆管家角色**：负责机器人的个性化记忆。
-
-- **工作流程:** 提供一个客户端，用于与云端`数据中心`的“记忆图谱”数据库进行通信。在进行自然语言交互或执行个性化任务时，DIL会通过此接口查询用户的偏好和历史信息（如“用户最喜欢的杯子是蓝色的”），并将新的重要信息（如“今天用户把钥匙放在了玄关的桌子上”）写入记忆库。
-
-### 🧩**3.7模式管理器 (Mode Manager):**
-
-- 这是`DIL`内部一个全新的核心组件，负责管理机器人的全局状态（`AUTONOMOUS` vs `TELEOPERATION`）。
-- 它需要提供一个内部API，供其他逻辑（如失败检测器）调用以请求模式切换。
-
-### 🧩3.8**失败检测器 (Failure Detector):**
-
-- 这是一个新的逻辑节点或子系统。
-- **职责:** 监控自主任务的执行状态（如通过目标检测验证抓取是否成功），并在检测到失败时，调用“模式管理器”切换到遥操作模式。
-
-### 🧩3.9**修改决策流以支持残差学习:**
-
-- `DIL`的最终动作输出逻辑需要被修改。
-- **原流程:** `VLA -> HAL`
-- **新流程:** `VLA -> a_vla` -> (等待`ACR残差网络`发布`Δa`) -> `a_final = a_vla + Δa` -> `HAL`。这需要在DIL内部实现一个简单的同步或融合节点。
-
-
-
-## 🔗 4. 接口设计与数据流
-
-DIL作为一个核心的Python服务，是系统中信息流的“汇聚点”和“发源点”。
-
-### 📥 输入数据流
-
-| **数据源**       | **数据类型**                    | **优先级** | **延迟要求** | **示例场景**             |
-| ---------------- | ------------------------------- | ---------- | ------------ | ------------------------ |
-| **DMS数据总线**  | `BusMessage` (包含所有感知结果) | `HIGH`     | `< 20ms`     | 接收ACR的目标检测结果    |
-| **API应用层**    | `TaskRequest` (gRPC)            | `NORMAL`   | `< 100ms`    | 接收用户的语音或文本指令 |
-| **知识层 (LLM)** | `KnowledgeFragment` (gRPC)      | `NORMAL`   | `< 2s`       | 获取LLM对任务的分解      |
-
-### 📤 输出数据流
-
-| **目标模块**    | **数据类型**                             | **保证**     | **性能指标**                |
-| --------------- | ---------------------------------------- | ------------ | --------------------------- |
-| **HAL执行器**   | `MotorCommand` (gRPC)                    | 低延迟、可靠 | 指令下发延迟 < 10ms         |
-| **ACR算法层**   | `StartContainerRequest` (gRPC)           | 异步响应     | 动态加载算法服务            |
-| **DMS数据总线** | `DILStatus`, `TaskProgress` (BusMessage) | 状态广播     | DIL内部状态和任务进度的上报 |
-| **API应用层**   | `TaskResponse` (gRPC)                    | 异步响应     | 向用户反馈任务结果          |
-
-### 🧬 核心API草案 (`dil.proto`)
-
-```protobuf
-// protos/arf/edge/v1/dil.proto
-syntax = "proto3";
-
-package arf.edge.v1;
-
-// 任务状态
-message TaskStatus {
-    string task_id = 1;
-    string status = 2; // e.g., "PENDING", "RUNNING", "SUCCEEDED", "FAILED"
-    string message = 3;
-}
-
-// DIL对外提供的任务管理服务
-service DILService {
-  // 提交一个高层任务（如文本指令）
-  rpc SubmitTask(SubmitTaskRequest) returns (SubmitTaskResponse);
-  // 获取一个任务的当前状态
-  rpc GetTaskStatus(GetTaskStatusRequest) returns (TaskStatus);
-  // 取消一个正在运行的任务
-  rpc CancelTask(CancelTaskRequest) returns (CancelTaskResponse);
-  // [V1.1 新增] 手动设置机器人操作模式
-  rpc SetOperationMode(SetOperationModeRequest) returns (SetOperationModeResponse);
-}
-
-message SubmitTaskRequest {
-    string task_description = 1; // e.g., "bring me the red apple from the table"
-}
-message SubmitTaskResponse {
-    string task_id = 1;
-}
-message GetTaskStatusRequest {
-    string task_id = 1;
-}
-message CancelTaskRequest {
-    string task_id = 1;
-}
-message CancelTaskResponse {
-    bool success = 1;
-}
-
-enum OperationMode {
-    AUTONOMOUS = 0;
-    TELEOPERATION = 1;
-}
-
-message SetOperationModeRequest {
-    OperationMode mode = 1;
-}
-message SetOperationModeResponse {
-    bool success = 1;
-}
+        self.logger.warning(f"{target_object} not found.")
+        return False
 ```
 
 ## 🛠️ 5. 技术栈与开发环境
 
-### 💻 核心技术栈
-
-| **技术领域** | **选型**     | **版本要求** | **用途说明**             |
-| ------------ | ------------ | ------------ | ------------------------ |
-| **编程语言** | **Python**   | `3.10+`      | AI生态的核心，快速迭代   |
-| **AI框架**   | **PyTorch**  | `2.0+`       | 运行端到端的神经网络策略 |
-| **行为树**   | **py_trees** | `2.1+`       | 实现结构化的任务逻辑     |
-| **gRPC框架** | **grpcio**   | 最新稳定版   | 与其他模块的服务接口     |
-| **测试框架** | **Pytest**   | 最新稳定版   | 单元测试和集成测试       |
+| **技术领域**   | **选型**       | **版本要求** | **用途说明**             |
+| ---------- | ------------ | -------- | -------------------- |
+| **编程语言**   | **Python**   | `3.10+`  | AI生态的核心，最适合实现复杂的决策逻辑 |
+| **AI框架**   | **PyTorch**  | `2.0+`   | 用于运行端到端的神经网络策略组件     |
+| **行为树**    | **py_trees** | `2.1+`   | 官方`bt_manager`组件的后端  |
+| **gRPC框架** | **grpcio**   | 最新稳定版    | 与其他模块的服务接口           |
+| **测试框架**   | **Pytest**   | 最新稳定版    | 用于组件和实例的单元测试与集成测试    |
 
 ## 🔧 6. 开发实施细节
 
-### 🏗️ 6.1 项目结构 V1
+### 🏗️ 6.1 项目结构
+
+DIL模块的代码将组织为一个Python库 (`arf_dil_framework`)，包含框架核心和官方组件。开发者创建的DIL实例将是独立的项目。
 
 ```
-services/edge-plane/dil-service/
+sdk/python/arf_dil_framework/
 ├── arf_dil/
-│   ├── __init__.py
-│   ├── server.py              # DIL服务的gRPC服务器入口
-│   ├── main_loop.py           # 核心决策循环
-│   ├── world_model.py         # 世界模型/状态管理
-│   ├── bt_manager.py          # 行为树管理器
-│   ├── policies/              # 策略库
-│   │   └── navigation.py
-│   └── clients/               # 调用其他ARF服务的gRPC客户端封装
-│       └── acr_client.py
-├── tests/
-│   └── test_main_loop.py
-├── configs/
-│   └── default_behaviors.xml  # 行为树的XML定义文件
-├── Dockerfile
-├── requirements.txt
-└── README.md
+│   ├── core/                  # DIL框架核心 (Component基类, Instance启动器)
+│   │   ├── component.py
+│   │   └── instance.py
+│   └── components/            # 官方标准组件库
+│       ├── bt_manager.py
+│       ├── world_model.py
+│       └── ...
+└── pyproject.toml
+
+reference_implementations/
+└── home_assistant_dil/      # 一个官方参考DIL实例的项目
+    ├── components/            # 该项目自定义的组件
+    │   └── custom_grasp_component.py
+    ├── main.py                # DIL实例的入口，负责组合和启动所有组件
+    ├── behaviors/             # 行为树定义文件
+    └── requirements.txt
 ```
-
-### 🧪 6.2 测试与验证策略
-
-
-
-- **单元测试:** 对`world_model`、`policies`等纯逻辑模块进行单元测试。
-- **集成测试:**
-  - **模拟器测试:** 在`仿真模块`中，搭建一个标准测试场景。编写测试脚本，通过gRPC向DIL提交一个多步任务（如“找到红色方块并推到绿色区域”），验证任务能否被成功分解和执行。
-  - **数据驱动测试:** 使用`DMS`的数据回放功能，向DIL注入一段真实的传感器数据，验证其决策逻辑是否符合预期。
-
-------
-
-
 
 ## 🚀 7. 开发任务 (Getting Started)
 
+#### **第一阶段：核心框架与基础组件 (Foundation)**
 
+- **任务1：实现DIL框架核心**
+  - **交付物:** 一个Python库，包含`DILComponent`基类和`DILInstance`启动器，让开发者可以注册和连接自定义组件。
+- **任务2：开发`WorldModelComponent`和`SafetyMonitorComponent`**
+  - **交付物:** 两个核心的官方组件，作为所有决策架构的基础。
+- **任务3：编写“如何创建DIL组件”的教程**
+  - **交付物:** 一份详细的开发者文档，指导开发者完成第一个自定义组件的开发。
 
+#### **第二阶段：任务编排与官方参考实现 (Orchestration & Demo)**
 
+- **任务1：开发`BTManagerComponent`和`PolicyManagerComponent`**
+  - **交付物:** 两个用于任务编排和执行的核心组件。
+- **任务2：开发第一个“官方参考DIL实例”**
+  - **交付物:** 组合第一、二阶段的官方组件，构建一个能完成“导航到指定点”任务的完整DIL实例，并开源其组合代码，作为最佳实践。
+- **任务3：开发`ModeManager`与`FailureDetector`组件**
+  - **交付物:** 两个用于实现人机协同和失败学习闭环的关键组件。
 
-#### **第一阶段：核心框架与数据融合 (Foundation & Fusion)**
+#### **第三阶段及以后：高级组件与生态丰富 (Advanced Components & Ecosystem)**
 
-
-
-- **任务1：实现DIL服务骨架**
-  - **交付物:** 一个用Python实现的`DILService`，包含所有RPC方法的空实现。
-- **任务2：实现数据订阅与世界模型**
-  - **交付物:** DIL能够使用`Python SDK`从`DMS`订阅至少两种不同的感知数据（如目标列表、机器人位姿），并将其存储在内部的`WorldModel`对象中。
-- **任务3：实现一个简单的“直通”决策流**
-  - **交付物:** 一个最简单的逻辑：当`WorldModel`中检测到“人”时，调用`HAL`的`MotorActuatorService`让机器人底盘停止运动。
-
-
-
-#### **第二阶段：任务编排与执行 (Orchestration & Execution)**
-
-
-
-- **任务1：集成行为树引擎**
-  - **交付物:** 集成`py_trees`库，实现一个可以加载和执行XML定义的行为树的`BTManager`。
-- **任务2：开发第一批行为节点**
-  - **交付物:** 开发至少3个可复用的行为节点：`IsObjectDetected` (Condition), `CallACRService` (Action), `CallHALService` (Action)。
-- **任务3：实现第一个多步任务**
-  - **交付物:** 编写一个行为树XML文件，实现“在场景中寻找一个特定物体”的任务。
-
-
-
-#### **第三阶段：知识推理与高级决策 (Reasoning & Advanced Decision)**
-
-
-
-- **任务1：集成LLM服务**
-  - **交付物:** 实现一个`LLMAgent`，能够将自然语言指令发送给LLM服务，并解析返回的结构化子任务。
-- **任务2：实现策略库**
-  - **交付物:** 实现一个`PolicyManager`，可以根据名称加载不同的Python策略类。并实现第一个具体的策略（如一个简单的避障导航策略）。
-- **任务3：任务规划与策略执行联动**
-  - **交付物:** DIL能够接收一个高级指令（如“去厨房”），由`LLMAgent`分解为`MapsTo(kitchen)`，然后由`BTManager`执行，`MapsTo`节点再从`PolicyManager`中加载导航策略来完成移动。
-
-
-
-#### **第四阶段：安全、鲁棒性与优化 (Safety, Robustness & Optimization)**
-
-
-
-- **任务1：实现安全调度器**
-  - **交付物:** 实现`SafetyScheduler`，能够根据模拟的风险信号，覆盖行为树的输出，并发送紧急停止指令。
-- **任务2：集成真实端到端测试**
-  - **交付物:** 在一个真实的机器人上，完整地运行第三阶段开发的“去厨房”任务，并提交测试报告。
-- **任务3：性能分析与优化**
-  - **交付物:** 分析整个决策链条的端到端延迟，并进行初步优化。
-
-
-
-#### **第五阶段及以后：迈向认知代理 (Towards Cognitive Agency)**
-
-
-
-*此部分为V1.1及后续版本规划，旨在实现更高阶的智能。*
-
-- **任务5.1: 实现在线学习闭环**
-  - **交付物:** 实现`在线学习管理器`。在一个完整的“自主失败 -> 遥操作修正 -> 数据记录 -> 在线微调”的端到端测试中，验证微调后的模型在同一任务上的成功率有显著提升。
-- **任务5.2: 集成预测性世界模型**
-  - **交付物:** 与算法团队协作，将一个预训练的“行人意图预测模型”作为`ACR`容器部署。DIL能够调用此模型，并在仿真环境中展示其在动态避障任务中的效果优于纯反应式策略。
-- **任务5.3: 开发长期记忆原型**
-  - **交付物:** 实现`长期记忆接口`，并开发一个家庭服务应用场景：用户可以告知机器人自己物品的存放位置，并在第二天通过自然语言查询，机器人能够根据记忆成功取回物品。
-- **任务5.4: 完善模式管理器与人机协同**
-  - **交付物:** 完整实现`DIL`内部的`模式管理器`和`失败检测器`，确保自主模式和遥操作模式之间可以无缝、可靠地切换。
+- **任务3.1: 开发`TaskPlanner` (LLM Agent)组件**
+  - **交付物:** 一个能与LLM服务交互，进行任务分解的官方组件。
+- **任务3.2: 开发`OnlineLearner`组件**
+  - **交付物:** 一个能实现边缘端在线微调的官方组件。
+- **任务3.3: 丰富参考实例库**
+  - **交付物:** 提供更多面向不同场景（如工业、物流）的官方DIL实例，展示框架的强大能力和灵活性。

@@ -1,9 +1,9 @@
-# 🔥 ARF 模块开发参考文档：算法容器层 (ACR)  V1.1
+# 🔥 ARF 模块开发参考文档：算法容器层 (ACR) V1.1
 
 > 🎯 **角色定位:** ARF的"心脏"与"工具箱" - 承载、管理和执行所有AI算法。
->
+> 
 > 📦 **模块代号:** `arf-edge-acr`
->
+> 
 > ⚡ **所属:** ARF 边缘平台 (Edge Plane)
 
 ## 📋 1. 核心职责与设计理念
@@ -43,16 +43,16 @@ ACR的设计将“管理器”和“被管理者”彻底分离：
 
 ## 📝 2. 核心需求 (Core Requirements)
 
-| **ID** | **需求描述**                           | **验收标准**                                                 | **优先级**     |
-| ------ | -------------------------------------- | ------------------------------------------------------------ | -------------- |
-| **A1** | **算法环境隔离 (Env. Isolation)**      | 每个算法必须运行在独立的环境中（`venv`/`Docker`），拥有自己独立的依赖库版本。 | **最高**       |
-| **A2** | **生命周期管理 (Lifecycle Mgt.)**      | `ACR运行时`必须提供gRPC接口，用于远程启动、停止、查询算法容器的状态。 | **最高**       |
-| **A3** | **数据流对接 (Data Flow Integration)** | 算法容器必须能通过标准SDK，轻松地从`DMS`订阅输入数据，并将处理结果发布回`DMS`。 | **最高**       |
-| **A4** | **资源监控与限制 (Resource Mgt.)**     | `ACR运行时`必须能监控每个算法容器的CPU、内存使用情况，并能在未来支持资源限制。 | **高**         |
-| **A5** | **配置注入 (Config Injection)**        | `ACR运行时`必须支持在启动算法容器时，通过环境变量或配置文件，向其注入自定义的参数。 | **高**         |
-| **A6** | **热更新与热切换 (Hot Swap)**          | (未来规划) 支持在不中断系统服务的情况下，将一个正在运行的算法容器平滑地升级到新版本。 | **中**         |
-| **A7** | **资源自适应调度**                     | **[V1.1+ 新增]** `ACR运行时`必须能根据机器人的全局状态（如电量、任务模式）动态调整容器的资源配额。 | **高 (V1.1+)** |
-| **A8** | **零拷贝通信**                         | **[V1.1+ 新增]** 必须为指定的高性能算法流水线提供基于共享内存的零拷贝通信机制。 | **中 (V1.1+)** |
+| **ID** | **需求描述**                          | **验收标准**                                                       | **优先级**       |
+| ------ | --------------------------------- | -------------------------------------------------------------- | ------------- |
+| **A1** | **算法环境隔离 (Env. Isolation)**       | 每个算法必须运行在独立的环境中（`venv`/`Docker`），拥有自己独立的依赖库版本。                 | **最高**        |
+| **A2** | **生命周期管理 (Lifecycle Mgt.)**       | `ACR运行时`必须提供gRPC接口，用于远程启动、停止、查询算法容器的状态。                        | **最高**        |
+| **A3** | **数据流对接 (Data Flow Integration)** | 算法容器必须能通过标准SDK，轻松地从`DMS`订阅输入数据，并将处理结果发布回`DMS`。                 | **最高**        |
+| **A4** | **资源监控与限制 (Resource Mgt.)**       | `ACR运行时`必须能监控每个算法容器的CPU、内存使用情况，并能在未来支持资源限制。                    | **高**         |
+| **A5** | **配置注入 (Config Injection)**       | `ACR运行时`必须支持在启动算法容器时，通过环境变量或配置文件，向其注入自定义的参数。                   | **高**         |
+| **A6** | **热更新与热切换 (Hot Swap)**            | (未来规划) 支持在不中断系统服务的情况下，将一个正在运行的算法容器平滑地升级到新版本。                   | **中**         |
+| **A7** | **资源自适应调度**                       | **[V1.1+ 新增]** `ACR运行时`必须能根据机器人的全局状态（如电量、任务模式）动态调整容器的资源配额。     | **高 (V1.1+)** |
+| **A8** | **零拷贝通信**                         | **[V1.1+ 新增]** 必须为指定的高性能算法流水线提供基于共享内存的零拷贝通信机制。                 | **中 (V1.1+)** |
 | **A9** | **算法图执行**                         | **[V1.1+ 新增]** 必须支持通过配置文件定义一个由多个算法容器组成的有向无环图（DAG），并由运行时负责编排执行。 | **中 (V1.1+)** |
 
 ## V1.1
@@ -79,16 +79,12 @@ ACR的设计将“管理器”和“被管理者”彻底分离：
 
 ### V1.1 新增高级功能子模块
 
-
-
 - **资源调节器 (Resource Governor):**
   - **职责:** 这是`ACR运行时`内部的一个新组件。它会订阅`DMS`上的机器人状态主题，获取电量、系统负载、当前DIL任务模式等信息。基于预设的规则（可由`Fleet Management`下发），它会动态调整正在运行的容器的CPU/GPU资源限制，以确保系统整体的稳定性和续航。
 - **算法图执行引擎 (Graph Execution Engine):**
   - **职责:** 负责解析用户提交的算法图（DAG）配置文件。**该引擎是实现`应用层`技能商店的核心技术支撑**。每一个可安装的‘技能’，都可以被定义为一个算法图，由本引擎负责解析和执行。它会根据图的拓扑结构，按顺序启动各个算法容器，并为需要零拷贝通信的节点建立共享内存通道，然后监控整个图的执行状态。
 - **共享内存管理器 (Shared Memory Manager):**
   - **职责:** 负责在需要零拷贝通信的容器之间，创建、管理和清理共享内存段，并将内存段的地址信息注入到相应的容器中。
-
-
 
 ### 📦 3.2 算法容器 (Algorithm Container)
 
@@ -98,25 +94,74 @@ ACR的设计将“管理器”和“被管理者”彻底分离：
 - **`main.py`:** 算法的启动入口。它会使用`ARF Python SDK`来初始化一个`Node`，创建`Publisher`和`Subscriber`，然后进入`spin()`循环。
 - **`Dockerfile` (Docker模式):** 定义了如何将算法代码和依赖打包成一个可运行的镜像。
 
+### 3.3高级集成模式 (Advanced Integration Patterns)
+
+### 3.3.1 将ACR容器组合为DIL组件
+
+在ARF灵活的认知架构中，ACR容器不仅可以作为被DIL调用的“工具”，多个ACR容器本身也可以被**组合封装**，形成一个更高级、更复杂的**DIL组件**。这为开发者提供了一种强大的、自下而上的能力构建方式。
+
+**核心思想：**
+
+一个DIL组件的内部实现，可以是“通过编排调用多个ACR原子能力，来完成一个更复杂的任务”。
+
+**示例：创建一个 VisualSearchComponent**
+
+假设我们需要一个能在指定房间内搜索红色杯子的DIL组件。我们可以不从头编写所有逻辑，而是组合利用已有的ACR原子能力：
+
+1. **navigation-acr**: 一个负责移动机器人到指定坐标的ACR容器。
+2. **yolov8-detector-acr**: 一个负责检测物体的ACR容器。
+
+我们的 VisualSearchComponent.py 的伪代码逻辑可能如下：
+
+```
+from arf_sdk.dil import DILComponent
+from arf_sdk.clients import ACRClient
+
+class VisualSearchComponent(DILComponent):
+    def __init__(self):
+        super().__init__("visual_searcher")
+        self.acr_client = ACRClient()
+        self.logger = self.get_logger()
+
+    def search_for_object(self, room_name, object_name, object_color):
+        self.logger.info(f"Starting visual search for a {object_color} {object_name} in {room_name}.")
+
+        # 步骤1：调用导航ACR移动到房间
+        nav_success = self.acr_client.call("navigation-acr", {"target": room_name})
+        if not nav_success:
+            return "Failed to navigate."
+
+        # 步骤2：调用检测ACR进行识别
+        detection_result = self.acr_client.call("yolov8-detector-acr", {"target": object_name, "color": object_color})
+
+        return detection_result
+```
+
+**优势：**
+
+- **复用性:** 无需重复造轮子，可以直接复用经过充分测试的原子算法能力。
+- **解耦:** 视觉搜索的逻辑与底层的导航、检测算法实现完全解耦。未来我们可以无缝替换yolov8-detector-acr为更先进的yolov9-detector-acr，而无需修改VisualSearchComponent的代码。
+- **清晰的层级:** 这种模式构建了从“原子能力（ACR）”到“组合能力（DIL组件）”再到“完整智能（DIL实例）”的清晰层次，让整个系统更易于理解和维护。
+
 ## 🔗 4. 接口设计与数据流
 
 ACR模块的对外接口，由`acr.proto`文件严格定义。
 
 ### 📥 输入数据流
 
-| **数据源**        | **数据类型**            | **优先级** | **延迟要求** | **示例场景**                            |
-| ----------------- | ----------------------- | ---------- | ------------ | --------------------------------------- |
-| **DMS数据总线**   | `BusMessage`            | `HIGH`     | `< 10ms`     | 算法容器订阅摄像头原始数据              |
-| **Dev (arf-cli)** | `StartContainerRequest` | `NORMAL`   | `< 500ms`    | 开发者通过命令行启动一个算法            |
-| **DIL决策层**     | `StartContainerRequest` | `HIGH`     | `< 100ms`    | DIL根据任务需求动态加载一个运动规划算法 |
+| **数据源**           | **数据类型**                | **优先级**  | **延迟要求**  | **示例场景**              |
+| ----------------- | ----------------------- | -------- | --------- | --------------------- |
+| **DMS数据总线**       | `BusMessage`            | `HIGH`   | `< 10ms`  | 算法容器订阅摄像头原始数据         |
+| **Dev (arf-cli)** | `StartContainerRequest` | `NORMAL` | `< 500ms` | 开发者通过命令行启动一个算法        |
+| **DIL决策层**        | `StartContainerRequest` | `HIGH`   | `< 100ms` | DIL根据任务需求动态加载一个运动规划算法 |
 
 ### 📤 输出数据流
 
-| **目标模块**      | **数据类型**             | **保证**   | **性能指标**             |
-| ----------------- | ------------------------ | ---------- | ------------------------ |
-| **DMS数据总线**   | `BusMessage`             | 高吞吐量   | 算法处理结果的发布       |
-| **Dev (arf-cli)** | `LogEntry`               | 实时日志流 | 方便开发者调试           |
-| **DIL决策层**     | `StartContainerResponse` | 异步响应   | 容器启动成功或失败的确认 |
+| **目标模块**          | **数据类型**                 | **保证** | **性能指标**     |
+| ----------------- | ------------------------ | ------ | ------------ |
+| **DMS数据总线**       | `BusMessage`             | 高吞吐量   | 算法处理结果的发布    |
+| **Dev (arf-cli)** | `LogEntry`               | 实时日志流  | 方便开发者调试      |
+| **DIL决策层**        | `StartContainerResponse` | 异步响应   | 容器启动成功或失败的确认 |
 
 ### 🧬 核心API草案 (`acr.proto`)
 
@@ -157,7 +202,7 @@ message StartContainerRequest {
   string container_id = 1;
   string project_path = 2;
   // ... 其他字段 ...
-  
+
   // [V1.1 新增] 资源限制
   optional ResourceLimits resource_limits = 4;
 }
@@ -179,13 +224,13 @@ message StartGraphRequest {
 
 ### 💻 核心技术栈
 
-| **技术领域**       | **选型**                   | **版本要求**    | **用途说明**                      |
-| ------------------ | -------------------------- | --------------- | --------------------------------- |
+| **技术领域**    | **选型**                     | **版本要求**        | **用途说明**           |
+| ----------- | -------------------------- | --------------- | ------------------ |
 | **运行时编程语言** | **Go**                     | `1.21+`         | 构建高性能、高并发的ACR运行时服务 |
-| **算法封装语言**   | **Python / C++**           | `Python 3.10+`  | 算法实现和SDK调用                 |
-| **gRPC框架**       | **grpc-go, grpcio**        | 最新稳定版      | 实现`.proto`定义的接口            |
-| **容器化技术**     | **Python `venv`, Docker**  | `Docker 20.10+` | 实现算法的环境隔离                |
-| **测试框架**       | **Go Native Test, Pytest** | 最新稳定版      | 单元测试和接口测试                |
+| **算法封装语言**  | **Python / C++**           | `Python 3.10+`  | 算法实现和SDK调用         |
+| **gRPC框架**  | **grpc-go, grpcio**        | 最新稳定版           | 实现`.proto`定义的接口    |
+| **容器化技术**   | **Python `venv`, Docker**  | `Docker 20.10+` | 实现算法的环境隔离          |
+| **测试框架**    | **Go Native Test, Pytest** | 最新稳定版           | 单元测试和接口测试          |
 
 ## 🔧 6. 开发实施细节
 
@@ -217,8 +262,6 @@ algorithms/perception/object-detector/ # 一个算法容器项目 (Python)
 
 ### 🧪 6.2 测试与验证策略
 
-
-
 - **单元测试:** 对`ACR运行时`的`manager`模块进行单元测试。对算法容器的`infer.py`进行单元测试。
 - **集成测试:**
   - **启动/停止测试:** 编写测试脚本，通过gRPC调用`StartContainer`和`StopContainer`，并验证`ListContainers`返回的状态是否正确。
@@ -227,17 +270,9 @@ algorithms/perception/object-detector/ # 一个算法容器项目 (Python)
 
 ------
 
-
-
 ## 🚀 7. 开发任务 (Getting Started)
 
-
-
-
-
 #### **第一阶段：本地进程管理 (Local Process Management)**
-
-
 
 - **任务1：实现`ACR运行时`的gRPC服务骨架**
   - **交付物:** 一个用Go实现的`ACRRuntimeService`，包含所有RPC方法的空实现。
@@ -246,11 +281,7 @@ algorithms/perception/object-detector/ # 一个算法容器项目 (Python)
 - **任务3：实现日志流式传输**
   - **交付物:** `StreamLogs`方法能够捕获算法子进程的标准输出/错误，并将其流式传输给gRPC客户端。
 
-
-
 #### **第二阶段：与DMS集成 (Integration with DMS)**
-
-
 
 - **任务1：实现`arf.yaml`解析**
   - **交付物:** `ACR运行时`能够解析算法项目中的`arf.yaml`，并获取其`subscribes`和`publishes`的主题列表。
@@ -259,11 +290,7 @@ algorithms/perception/object-detector/ # 一个算法容器项目 (Python)
 - **任务3：实现第一个算法容器**
   - **交付物:** 一个简单的“回声”算法容器，使用`Python SDK`，能完整地跑通“从DMS订阅->处理->发布回DMS”的流程。
 
-
-
 #### **第三阶段：Docker集成与资源监控 (Dockerization & Monitoring)**
-
-
 
 - **任务1：实现Docker模式的`StartContainer`**
   - **交付物:** 为`StartContainer`增加一个`runtime`参数。当值为`docker`时，`ACR运行时`将通过Docker Engine API来启动算法容器。
@@ -272,11 +299,7 @@ algorithms/perception/object-detector/ # 一个算法容器项目 (Python)
 - **任务3：提供`arf-cli`集成**
   - **交付物:** 与`Dev`模块负责人协作，确保`arf-cli container start/stop/list/logs`等命令能够正常工作。
 
-
-
 #### **第四阶段：鲁棒性与高级功能 (Robustness & Advanced Features)**
-
-
 
 - **任务1：完善健康检查与自动重启**
   - **交付物:** `ACR运行时`能够监控算法容器的健康状况，并在其意外退出时，根据`arf.yaml`中的重启策略进行自动重启。
@@ -285,11 +308,7 @@ algorithms/perception/object-detector/ # 一个算法容器项目 (Python)
 - **任务3：压力测试**
   - **交付物:** 提交一份测试报告，展示`ACR运行时`在同时管理多个（如20个）算法容器时的性能表现和资源开销。
 
-
-
 #### **第五阶段及以后：迈向智能与可组合运行时 (Towards Intelligent & Composable Runtime)**
-
-
 
 *此部分为V1.1及后续版本规划，旨在提升性能和灵活性。*
 
